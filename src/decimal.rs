@@ -5,6 +5,8 @@ use crate::constants::{
 use crate::ops;
 use crate::Error;
 
+#[cfg(feature = "anchor")]
+use anchor_lang::prelude::{AnchorDeserialize, AnchorSerialize};
 use core::{
     cmp::{Ordering::Equal, *},
     fmt,
@@ -100,6 +102,7 @@ pub struct UnpackedDecimal {
 #[derive(Clone, Copy)]
 #[cfg_attr(feature = "diesel", derive(FromSqlRow, AsExpression), sql_type = "Numeric")]
 #[cfg_attr(feature = "c-repr", repr(C))]
+#[cfg_attr(feature = "anchor", derive(AnchorDeserialize, AnchorSerialize))]
 pub struct Decimal {
     // Bits 0-15: unused
     // Bits 16-23: Contains "e", a value between 0-28 that indicates the scale
@@ -612,6 +615,29 @@ impl Decimal {
         }
         self.flags = (scale << SCALE_SHIFT) | (self.flags & SIGN_MASK);
         Ok(())
+    }
+
+    /// Same as set_scale, but returns a copy
+    ///
+    /// # Arguments
+    ///
+    /// * `scale`: the new scale of the number
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use rust_decimal::Decimal;
+    ///
+    /// let mut one = Decimal::ONE;
+    /// assert_eq!(one.as_scale(5).unwrap().to_string(), "0.00001");
+    /// ```
+    pub fn as_scale(&self, scale: u32) -> Result<Self, Error> {
+        if scale > MAX_PRECISION_U32 {
+            return Err(Error::ScaleExceedsMaximumPrecision(scale));
+        }
+        let mut copy = *self;
+        copy.flags = (scale << SCALE_SHIFT) | (copy.flags & SIGN_MASK);
+        Ok(copy)
     }
 
     /// Modifies the `Decimal` to the given scale, attempting to do so without changing the

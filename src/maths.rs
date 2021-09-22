@@ -695,7 +695,7 @@ impl MathematicalOps for Decimal {
             (Decimal::from_parts_raw(4189029078, 2192791200, 1947296, 1835008), 13),
         ];
         let mut result = *self;
-        for (fraction, pow) in SERIES {
+        for &(fraction, pow) in &SERIES {
             result += fraction * self.powu(pow);
         }
         Some(result)
