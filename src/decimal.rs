@@ -19,7 +19,8 @@ use diesel::sql_types::Numeric;
 #[cfg(not(feature = "std"))]
 use num_traits::float::FloatCore;
 use num_traits::{
-    CheckedAdd, CheckedDiv, CheckedMul, CheckedRem, CheckedSub, FromPrimitive, Num, One, Signed, ToPrimitive, Zero,
+    Bounded, CheckedAdd, CheckedDiv, CheckedMul, CheckedRem, CheckedSub, FromPrimitive, Num, One, Signed, ToPrimitive,
+    Zero,
 };
 
 /// The smallest value that can be represented by this decimal type.
@@ -1605,6 +1606,16 @@ impl Zero for Decimal {
 
     fn is_zero(&self) -> bool {
         self.is_zero()
+    }
+}
+
+impl Bounded for Decimal {
+    fn min_value() -> Decimal {
+        Decimal::MIN
+    }
+
+    fn max_value() -> Decimal {
+        Decimal::MAX
     }
 }
 
